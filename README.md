@@ -47,9 +47,14 @@ The `TimeInterval` is a value object that represents an interval of time. It is 
   string $leadingData
   string $trailingData
 ```
+---
+
+**Installation**
+
+`$ composer require ekinhbayar/interval-parser`
 
 
-Basic usage:
+**Basic usage**
 
 ```php
 /**
@@ -82,4 +87,4 @@ var_dump($dateInterval);
 
 ---
 
-Thanks a ton to @bwoebi, @pcrov, @PeeHaa, @DaveRandom for everything they made me learn and for all the help! :)
+Thanks a ton to [Pieter](https://github.com/PeeHaa), [Chris](https://github.com/DaveRandom), [Bob](https://github.com/bwoebi),  [Paul](https://github.com/pcrov) for everything they made me learn and for all their help! :-)
