@@ -6,7 +6,7 @@
  *
  * @category   IntervalParser
  * @author     Ekin H. Bayar <ekin@coproductivity.com>
- * @version    1.0.0
+ * @version    0.1.2
  */
 
 namespace IntervalParser;
@@ -20,39 +20,13 @@ class IntervalParser
     /**
      * Set of regular expressions utilized to match/replace/validate parts of a given input
      *
-     * Thanks a ton to @bwoebi and @pcrov for helping out on all regexes <3
      *
      * If leading text is required, it should separate time and text by in|at
      * ie. foo in 9 weeks 5 days
      *
-     * @var string $separatorExpression
+     * @var string $leadingDataSeparator
      */
     public static $leadingDataSeparator = "/(.*)\s+(?:in)\s+(.*)/ui";
-
-    # Definitions of sub patterns for a valid interval
-    public static $intervalSeparatorDefinitions = <<<'REGEX'
-    /(?(DEFINE)
-      (?<integer>
-       (?:\G|(?!\n))
-       (\s*\b)?
-       \d{1,5}
-       \s*
-      )
-      (?<timepart>
-       (?&integer)
-       ( s(ec(ond)?s?)?
-       | m(on(ths?)?|in(ute)?s?)?
-       | h(rs?|ours?)?
-       | d(ays?)?
-       | w(eeks?)?
-       )
-      )
-    )
-REGEX;
-
-    public static $intervalOnly = "^(?<interval>(?&timepart)++)$/uix";
-
-    public static $intervalWithTrailingData = "^(?<interval>(?&timepart)++)(?<trailing>.+)$/uix";
 
     /**
      * Used to turn a given non-strtotime-compatible time string into a compatible one
@@ -80,6 +54,32 @@ REGEX;
     ~uix
 REGEX;
 
+    # Definitions of sub patterns for a valid interval
+    public static $intervalSeparatorDefinitions = <<<'REGEX'
+    /(?(DEFINE)
+      (?<integer>
+       (?:\G|(?!\n))
+       (\s*\b)?
+       \d{1,5}
+       \s*
+      )
+      (?<timepart>
+       (?&integer)
+       ( s(ec(ond)?s?)?
+       | m(on(ths?)?|in(ute)?s?)?
+       | h(rs?|ours?)?
+       | d(ays?)?
+       | w(eeks?)?
+       )
+      )
+    )
+REGEX;
+
+    # Regex to match a valid interval, holds the value in $matches['interval']
+    public static $intervalOnly = "^(?<interval>(?&timepart)++)$/uix";
+
+    # Regex to match a valid interval and any trailing string, holds the interval in $matches['interval'], the rest in $matches['trailing']
+    public static $intervalWithTrailingData = "^(?<interval>(?&timepart)++)(?<trailing>.+)$/uix";
 
     /**
      * Looks for a valid interval along with leading and/or trailing data IF the respective flags are set.

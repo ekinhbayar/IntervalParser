@@ -1,7 +1,6 @@
 <?php declare(strict_types = 1);
 /**
  * Value object representing a time interval.
- *
  */
 
 namespace IntervalParser;
@@ -16,6 +15,15 @@ class TimeInterval
     private $leadingData;
     private $trailingData;
 
+    /**
+     * TimeInterval constructor.
+     *
+     * @param int $intervalOffset
+     * @param int $intervalLength
+     * @param DateInterval $interval
+     * @param string|null $leadingData
+     * @param string|null $trailingData
+     */
     public function __construct(
         int $intervalOffset,
         int $intervalLength,
