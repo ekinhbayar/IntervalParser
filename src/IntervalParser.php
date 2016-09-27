@@ -27,10 +27,10 @@ class IntervalParser
      *
      * @var string $separatorExpression
      */
-    private static $leadingDataSeparator = "/(.*)\s+(?:in)\s+(.*)/ui";
+    public static $leadingDataSeparator = "/(.*)\s+(?:in)\s+(.*)/ui";
 
     # Definitions of sub patterns for a valid interval
-    private static $intervalSeparatorDefinitions = <<<'REGEX'
+    public static $intervalSeparatorDefinitions = <<<'REGEX'
     /(?(DEFINE)
       (?<integer>
        (?:\G|(?!\n))
@@ -50,9 +50,9 @@ class IntervalParser
     )
 REGEX;
 
-    private static $intervalOnly = "^(?<interval>(?&timepart)++)$/uix";
+    public static $intervalOnly = "^(?<interval>(?&timepart)++)$/uix";
 
-    private static $intervalWithTrailingData = "^(?<interval>(?&timepart)++)(?<trailing>.+)$/uix";
+    public static $intervalWithTrailingData = "^(?<interval>(?&timepart)++)(?<trailing>.+)$/uix";
 
     /**
      * Used to turn a given non-strtotime-compatible time string into a compatible one
@@ -60,7 +60,7 @@ REGEX;
      *
      * @var string $normalizerExpression
      */
-    private static $normalizerExpression = <<<'REGEX'
+    public static $normalizerExpression = <<<'REGEX'
     ~
     # grab the integer part of time string
     \s? (?<int> \d{1,5}) \s?
