@@ -1,0 +1,26 @@
+{
+  "name": "ekinhbayar/interval-parser",
+  "homepage": "https://github.com/ekinhbayar/IntervalParser",
+  "description": "Interval Parser. Still a work in progress.",
+  "keywords": [
+    "time",
+    "interval",
+    "parser"
+  ],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Ekin H. Bayar",
+      "email": "ekin@coproductivity.com",
+      "role": "Lead Developer"
+    }
+  ],
+  "require": {
+    "php": "^7"
+  },
+  "autoload": {
+    "psr-4": {
+      "IntervalParser\\": "src/"
+    }
+  }
+}
