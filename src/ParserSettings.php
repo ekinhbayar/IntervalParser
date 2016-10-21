@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /** Parser Settings
  *
  * IntervalParser takes a ParserSettings object which is handy for when you want to deal with multiple intervals.
