@@ -8,7 +8,6 @@
  * @author     Ekin H. Bayar <ekin@coproductivity.com>
  * @version    0.2.0
  */
-
 namespace IntervalParser;
 
 use \DateInterval;
@@ -17,7 +16,6 @@ use IntervalParser\ParserSettings;
 
 class IntervalParser
 {
-
     /**
      * Set of regular expressions utilized to match/replace/validate parts of a given input.
      *

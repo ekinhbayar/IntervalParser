@@ -1,7 +1,6 @@
 <?php
 namespace IntervalParser;
 
-
 class IntervalIterator implements \Iterator
 {
     private $var = [];
@@ -42,6 +41,4 @@ class IntervalIterator implements \Iterator
         $var = ($key !== null && $key !== false);
         return $var;
     }
-
 }
-
