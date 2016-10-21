@@ -387,4 +387,3 @@ REGEX;
         throw new FormatException("Given string is not a valid time interval.");
     }
 }
-
