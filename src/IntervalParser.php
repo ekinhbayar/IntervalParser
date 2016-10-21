@@ -112,6 +112,7 @@ REGEX;
      * @param string $input
      * @param int $flags
      * @return TimeInterval|array
+     * @throws InvalidFlagException
      * @throws FormatException
      */
     public function findInterval(string $input, int $flags = IntervalFlags::INTERVAL_ONLY)
@@ -372,7 +373,7 @@ REGEX;
      *
      * @param string $input
      * @return DateInterval
-     * @throws \InvalidArgumentException
+     * @throws FormatException
      */
     public function parseInterval(string $input): \DateInterval
     {
