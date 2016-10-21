@@ -4,42 +4,35 @@ namespace IntervalParser;
 
 class IntervalIterator implements \Iterator
 {
-    private $var = [];
+    private $intervals = [];
 
-    public function __construct($array)
+    public function __construct(array $intervals)
     {
-        if (is_array($array)) {
-            $this->var = $array;
-        }
+        $this->intervals = $intervals;
     }
 
     public function rewind()
     {
-        reset($this->var);
+        reset($this->intervals);
     }
 
     public function current()
     {
-        $var = current($this->var);
-        return $var;
+        return current($this->intervals);
     }
 
     public function key()
     {
-        $var = key($this->var);
-        return $var;
+        return key($this->intervals);
     }
 
     public function next()
     {
-        $var = next($this->var);
-        return $var;
+        return next($this->intervals);
     }
 
     public function valid()
     {
-        $key = key($this->var);
-        $var = ($key !== null && $key !== false);
-        return $var;
+        return key($this->intervals) !== null;
     }
 }
