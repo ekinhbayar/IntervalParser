@@ -6,27 +6,56 @@
  *
  * @category   IntervalParser
  * @author     Ekin H. Bayar <ekin@coproductivity.com>
- * @version    0.1.2
+ * @version    0.2.0
  */
 
 namespace IntervalParser;
 
 use \DateInterval;
 use IntervalParser\IntervalFlags;
+use IntervalParser\ParserSettings;
 
 class IntervalParser
 {
 
     /**
-     * Set of regular expressions utilized to match/replace/validate parts of a given input
+     * Set of regular expressions utilized to match/replace/validate parts of a given input.
      *
-     *
-     * If leading text is required, it should separate time and text by in|at
-     * ie. foo in 9 weeks 5 days
-     *
-     * @var string $leadingDataSeparator
+     * Don't forget to close parentheses when using $define
      */
-    public static $leadingDataSeparator = "/(.*)\s+(?:in)\s+(.*)/ui";
+    public static $define = "/(?(DEFINE)";
+
+    # Definitions of sub patterns for a valid interval
+    public static $integer  = <<<'REGEX'
+    (?<integer>
+       (?:\G|(?!\n))
+       (\s*\b)?
+       \d{1,5}
+       \s*
+    )
+REGEX;
+
+    # Starts with integer followed by time specified
+    public static $timepart = <<<'REGEX'
+    (?<timepart>
+       (?&integer)
+       ( s(ec(ond)?s?)?
+       | m(on(ths?)?|in(ute)?s?)?
+       | h(rs?|ours?)?
+       | d(ays?)?
+       | w(eeks?)?
+       )
+      )
+REGEX;
+
+    # Leading separator
+    public static $leadingSeparator = "(?<leadingSeparator>\s?(?:in)\s?)";
+
+    # Regex to match a valid interval, holds the value in $matches['interval']
+    public static $intervalOnly = "^(?<interval>(?&timepart)++)$/uix";
+
+    # Regex to match a valid interval and any trailing string, holds the interval in $matches['interval'], the rest in $matches['trailing']
+    public static $intervalWithTrailingData = "^(?<interval>(?&timepart)++)(?<trailing>.+)*?$/uix";
 
     /**
      * Used to turn a given non-strtotime-compatible time string into a compatible one
@@ -54,67 +83,74 @@ class IntervalParser
     ~uix
 REGEX;
 
-    # Definitions of sub patterns for a valid interval
-    public static $intervalSeparatorDefinitions = <<<'REGEX'
-    /(?(DEFINE)
-      (?<integer>
-       (?:\G|(?!\n))
-       (\s*\b)?
-       \d{1,5}
-       \s*
-      )
-      (?<timepart>
-       (?&integer)
-       ( s(ec(ond)?s?)?
-       | m(on(ths?)?|in(ute)?s?)?
-       | h(rs?|ours?)?
-       | d(ays?)?
-       | w(eeks?)?
-       )
-      )
-    )
+    # Regex to handle an input that may have multiple intervals along with leading and/or trailing data
+    public static $multipleIntervals = <<<'REGEX'
+    ^(?<leading>.*?)?
+     (?<sep>(?&leadingSeparator))?
+     (?<interval>(?&timepart)++)
+     (?<trailing>.*)
+    /uix
 REGEX;
 
-    # Regex to match a valid interval, holds the value in $matches['interval']
-    public static $intervalOnly = "^(?<interval>(?&timepart)++)$/uix";
-
-    # Regex to match a valid interval and any trailing string, holds the interval in $matches['interval'], the rest in $matches['trailing']
-    public static $intervalWithTrailingData = "^(?<interval>(?&timepart)++)(?<trailing>.+)$/uix";
+    /**
+     * IntervalParser constructor.
+     *
+     * Default settings are :
+     *
+     *  string $symbolSeparator  = ',',
+     *  string $wordSeparator = null
+     *
+     * @param \IntervalParser\ParserSettings $settings
+     */
+    public function __construct(ParserSettings $settings)
+    {
+        $this->settings = $settings;
+    }
 
     /**
      * Looks for a valid interval along with leading and/or trailing data IF the respective flags are set.
      * TimeInterval is essentially DateInterval with extra information such as interval offset & length, leading/trailing data.
-     * TODO: MULTIPLE_INTERVALS is not yet implemented.
      *
      * @param string $input
      * @param int $flags
-     * @return TimeInterval
-     * @throws \Error|\InvalidArgumentException
+     * @return TimeInterval|array
+     * @throws FormatException
      */
-    public function findInterval(string $input, int $flags = IntervalFlags::INTERVAL_ONLY) : TimeInterval
+    public function findInterval(string $input, int $flags = IntervalFlags::INTERVAL_ONLY)
     {
+        if( $flags
+            & ~IntervalFlags::INTERVAL_ONLY
+            & ~IntervalFlags::REQUIRE_TRAILING
+            & ~IntervalFlags::REQUIRE_LEADING
+            & ~IntervalFlags::MULTIPLE_INTERVALS
+        ){  throw new InvalidFlagException("You have tried to use an invalid flag combination."); }
+
         if($flags & IntervalFlags::INTERVAL_ONLY){
 
             $input = $this->normalizeTimeInterval($input);
 
-            if(preg_match(self::$intervalOnly, $input)){
+            $definition = self::$define . self::$integer . self::$timepart .')';
+            $expression = $definition . self::$intervalOnly;
+
+            if(preg_match($expression, $input)){
                 $intervalOffset = 0;
                 $intervalLength = strlen($input);
 
                 # create and return the interval object
                 $interval = DateInterval::createFromDateString($input);
-                return new TimeInterval($intervalOffset, $intervalLength, $interval, null, null);
+                return new TimeInterval($intervalOffset, $intervalLength, null, null, $interval);
             }
 
-            throw new \InvalidArgumentException("Given input is not a valid interval.");
+            throw new FormatException("Given input is not a valid interval.");
         }
 
         if($flags == (IntervalFlags::REQUIRE_LEADING | IntervalFlags::REQUIRE_TRAILING)){
 
-            # Requires the "in" separator, TODO: allow at|this|next too
-            $leadingSeparation = preg_match(self::$leadingDataSeparator, $input, $matches, PREG_OFFSET_CAPTURE);
+            $expression = $this->settings->getLeadingSeparatorExpression();
+
+            $leadingSeparation = preg_match($expression, $input, $matches, PREG_OFFSET_CAPTURE);
             if(!$leadingSeparation){
-                throw new \Error("Allowing leading data requires using a separator. Ie. foo in <interval>");
+                throw new FormatException("Allowing leading data requires using a separator. Ie. foo in <interval>");
             }
 
             $leadingData = $matches[1][0] ?? null;
@@ -122,10 +158,10 @@ REGEX;
 
             # throw early for missing parts
             if(!$leadingData){
-                throw new \InvalidArgumentException("Given input does not contain a valid leading data.");
+                throw new FormatException("Given input does not contain a valid leading data.");
             }
             if(!$intervalAndTrailingData){
-                throw new \InvalidArgumentException("Given input does not contain a valid interval and/or trailing data.");
+                throw new FormatException("Given input does not contain a valid interval and/or trailing data.");
             }
 
             $intervalOffset = $matches[2][1] ?? null;
@@ -133,7 +169,8 @@ REGEX;
             # If interval contains non-strtotime-compatible abbreviations, replace 'em
             $intervalAndTrailingData = $this->normalizeTimeInterval($intervalAndTrailingData);
 
-            $expression = self::$intervalSeparatorDefinitions . self::$intervalWithTrailingData;
+            $definition = self::$define . self::$integer . self::$timepart .')';
+            $expression = $definition . self::$intervalWithTrailingData;
 
             if(preg_match($expression, $intervalAndTrailingData, $parts)){
 
@@ -143,25 +180,30 @@ REGEX;
 
                 # create and return the interval object
                 $interval = DateInterval::createFromDateString($interval);
-                return new TimeInterval($intervalOffset, $intervalLength, $interval, $leadingData, $trailingData);
+                return new TimeInterval($intervalOffset, $intervalLength, $leadingData, $trailingData,  $interval);
             }
 
-            throw new \InvalidArgumentException("Given input does not contain a valid interval and/or trailing data.");
+            throw new FormatException("Given input does not contain a valid interval and/or trailing data.");
         }
 
         if($flags & IntervalFlags::REQUIRE_LEADING){
 
-            # Requires the "in" separator, TODO: allow at|this|next too
-            $leadingSeparation = preg_match(self::$leadingDataSeparator, $input, $matches, PREG_OFFSET_CAPTURE);
+            $expression = $this->settings->getLeadingSeparatorExpression();
+
+            $leadingSeparation = preg_match($expression, $input, $matches, PREG_OFFSET_CAPTURE);
             if(!$leadingSeparation){
-                throw new \Error("Allowing leading data requires using a separator. Ie. foo in <interval>");
+                throw new FormatException("Allowing leading data requires using a separator. Ie. foo in <interval>");
             }
 
             $leadingData = $matches[1][0] ?? null;
             $intervalAndPossibleTrailingData = $matches[2][0] ?? null;
 
-            if(!$leadingData || !$intervalAndPossibleTrailingData){
-                throw new \Error("Could not find any valid interval and/or leading data.");
+            if(!$leadingData){
+                throw new FormatException("Could not find any valid leading data.");
+            }
+
+            if(!$intervalAndPossibleTrailingData){
+                throw new FormatException("Could not find any valid interval and/or leading data.");
             }
 
             $intervalOffset = $matches[2][1] ?? null;
@@ -170,7 +212,8 @@ REGEX;
             $safeInterval = $this->normalizeTimeInterval($intervalAndPossibleTrailingData);
 
             # since above normalization is expected to not return any trailing data, only check for a valid interval
-            $expression = self::$intervalSeparatorDefinitions . self::$intervalOnly;
+            $definition = self::$define . self::$integer . self::$timepart .')';
+            $expression = $definition . self::$intervalOnly;
 
             if(preg_match($expression, $safeInterval, $parts)){
                 $interval = $parts['interval'];
@@ -178,15 +221,16 @@ REGEX;
 
                 # create the interval object
                 $interval = DateInterval::createFromDateString($interval);
-                return new TimeInterval($intervalOffset, $intervalLength, $interval, $leadingData, null);
+                return new TimeInterval($intervalOffset, $intervalLength, $leadingData, null, $interval);
             }
 
-            throw new \InvalidArgumentException("Given input does not contain a valid interval. Keep in mind trailing data is not allowed with currently specified flag.");
+            throw new FormatException("Given input does not contain a valid interval. Keep in mind trailing data is not allowed with current flag.");
         }
 
         if($flags & IntervalFlags::REQUIRE_TRAILING){
 
-            $expression = self::$intervalSeparatorDefinitions . self::$intervalWithTrailingData;
+            $definition = self::$define . self::$integer . self::$timepart .')';
+            $expression = $definition . self::$intervalWithTrailingData;
 
             # If interval contains non-strtotime-compatible abbreviations, replace 'em
             $safeInterval = $this->normalizeTimeInterval($input);
@@ -196,8 +240,12 @@ REGEX;
                 $trailingData = $parts['trailing'] ?? null;
                 $interval = $parts['interval'] ?? null;
 
-                if(!$trailingData || !$interval){
-                    throw new \Error("Could not find any valid interval and/or trailing data...");
+                if(!$interval){
+                    throw new FormatException("Could not find any valid interval.");
+                }
+
+                if(!$trailingData){
+                    throw new FormatException("Could not find any valid trailing data.");
                 }
 
                 $intervalLength = strlen($interval);
@@ -205,23 +253,67 @@ REGEX;
 
                 # create the interval object
                 $interval = DateInterval::createFromDateString($interval);
-                return new TimeInterval($intervalOffset, $intervalLength, $interval, null, $trailingData);
+                return new TimeInterval($intervalOffset, $intervalLength, null, $trailingData, $interval);
             }
 
-            throw new \InvalidArgumentException("Given input does not contain a valid interval. Keep in mind leading data is not allowed with currently specified flag.");
+            throw new FormatException("Given input does not contain a valid interval. Keep in mind leading data is not allowed with current flag.");
         }
 
         if($flags & IntervalFlags::MULTIPLE_INTERVALS){
-            throw new \Error("I'm sorry, multiple intervals is not allowed/implemented, yet.");
+
+            $payload = [];
+            $separator = ($this->settings->getSeparationType() == 'symbol')
+                ? $this->settings->getSymbolSeparator()
+                : $this->settings->getWordSeparator();
+
+            $expression = "/(?J)\b(?:(?<match>.*?)\s?{$separator})\s?|\b(?<match>.*)/ui";
+
+            if(preg_match_all($expression, $input, $intervals, PREG_SET_ORDER)){
+
+                $intervalSet = array_filter(array_map(function($set){
+                    foreach($iter = new IntervalIterator($set) as $key => $interval){
+                        if($iter->key() === 'match') {
+                            return $interval;
+                        }
+                    }
+                }, $intervals));
+
+                foreach($intervalSet as $key => $interval){
+
+                    $definition = self::$define . self::$leadingSeparator . self::$integer . self::$timepart .')';
+                    $expression = $definition . self::$multipleIntervals;
+
+                    preg_match($expression, $interval, $matches);
+                    $matches = array_filter($matches);
+
+                    $leadingData = $matches['leading'] ?? null;
+                    $leadingSep  = $matches['sep'] ?? null;
+                    $interval    = $matches['interval'] ?? null;
+                    $trailing    = $matches['trailing'] ?? null;
+
+                    if(!$leadingData) $leadingData = $leadingSep ?? "";
+
+                    $intervalOffset = (!$leadingSep) ? 0 : strlen($leadingData) + strlen($leadingSep);
+
+                    # If interval contains non-strtotime-compatible abbreviations, replace them
+                    $safeInterval = $this->normalizeTimeInterval($interval . $trailing);
+
+                    # Separate intervals from trailing data
+                    if(preg_match($expression, $safeInterval, $parts)){
+                        $trailingData = $parts['trailing'] ?? null;
+                        $interval = $parts['interval'] ?? null;
+                        if(!$interval) continue;
+
+                        $intervalLength = strlen($interval);
+                        # create the interval object
+                        $interval = DateInterval::createFromDateString($interval);
+                        $payload[] =  new TimeInterval($intervalOffset, $intervalLength, $leadingData, $trailingData, $interval);
+                    }
+                }
+
+                if($payload) return $payload;
+            }
         }
-
-        if( $flags
-            & ~IntervalFlags::INTERVAL_ONLY
-            & ~IntervalFlags::REQUIRE_TRAILING
-            & ~IntervalFlags::REQUIRE_LEADING
-            & ~IntervalFlags::MULTIPLE_INTERVALS
-        ){  throw new \InvalidArgumentException("You have tried to use an invalid flag combination."); }
-
     }
 
     /**
@@ -236,36 +328,37 @@ REGEX;
     {
         $output = preg_replace_callback(self::$normalizerExpression,
             function ($matches) {
+                $int = $matches['int'];
                 switch ($matches['time']) {
                     case 's':
-                        $t = ' seconds ';
+                        $t = ($int == 1) ? ' second ' : ' seconds ';
                         break;
                     case 'm':
-                        $t = ' minutes ';
+                        $t = ($int == 1) ? ' minute ' : ' minutes ';
                         break;
                     case 'h':
-                        $t = ' hours ';
+                        $t = ($int == 1) ? ' hour ' : ' hours ';
                         break;
                     case 'd':
-                        $t = ' days ';
+                        $t = ($int == 1) ? ' day ' : ' days ';
                         break;
                     case 'w':
-                        $t = ' weeks ';
+                        $t = ($int == 1) ? ' week ' : ' weeks ';
                         break;
                     case 'mon':
-                        $t = ' months ';
+                        $t = ($int == 1) ? ' month ' : ' months ';
                         break;
                     case 'y':
-                        $t = ' years ';
+                        $t = ($int == 1) ? ' year ' : ' years ';
                         break;
                 }
 
                 $t = $t ?? '';
                 # rebuild the interval string
-                $time = $matches['int'] . $t;
+                $time = $int . $t;
 
                 if(isset($matches['text'])){
-                    $time .= $matches['text'];
+                    $time .= trim($matches['text']);
                 }
 
                 return $time;
@@ -287,14 +380,14 @@ REGEX;
     {
         $input = trim($this->normalizeTimeInterval($input));
 
-        $expression = self::$intervalSeparatorDefinitions . self::$intervalOnly;
+        $definition = self::$define . self::$integer . self::$timepart .')';
+        $expression = $definition . self::$intervalOnly;
 
         if(preg_match($expression, $input, $matches)){
             return DateInterval::createFromDateString($input);
         }
 
-        throw new \InvalidArgumentException("Given string is not a valid time interval.");
+        throw new FormatException("Given string is not a valid time interval.");
     }
-
 }
 
