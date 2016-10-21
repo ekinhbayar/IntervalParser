@@ -32,9 +32,15 @@ class IntervalFlags
 }
 ```
 
-**Notes:** 
- - At the moment, the `MULTIPLE_INTERVALS` flag will throw an Error. This feature is not implemented, yet.
- - When leading data is allowed, you must separate it by "in" before specifying an interval.
+IntervalParser takes a `ParserSettings` object that allows you to set which separators to use, defaults being:
+
+```
+string $leadingSeparationString = "in",
+bool $keepLeadingSeparator = false,
+int $multipleSeparationType = self::SYMBOL,
+string $multipleSeparationSymbol  = ",",
+string $multipleSeparationWord = null
+```
 
 ---
  
@@ -70,7 +76,9 @@ $leading  = 'foo in 9w8d7h6m5s';
 $both = 'foo in 9d8h5m bar';
 $onlyInterval = '9 mon 2 w 3 m 4 d';
 
-$intervalParser = new IntervalParser();
+# Set ParserSettings for IntervalParser
+$settings = new ParserSettings("in", false);
+$intervalParser = new IntervalParser($settings);
 
 $intervalAndTrailing = $intervalParser->findInterval($trailing, IntervalFlags::REQUIRE_TRAILING);
 var_dump($intervalAndTrailing);
@@ -83,6 +91,23 @@ var_dump($timeIntervalWithBoth);
 
 $dateInterval = $intervalParser->parseInterval($onlyInterval);
 var_dump($dateInterval);
+
+
+# Multiple Intervals
+
+# 1. Comma Separated
+$multiple = 'foo in 9d8h5m bar , baz in 5 minutes, foo in 2 days 4 minutes boo, in 1 hr, 10 days';
+$multipleIntervals = $intervalParser1->findInterval($multiple, IntervalFlags::MULTIPLE_INTERVALS);
+var_dump($multipleIntervals);
+
+# 2. Separated by a defined-on-settings word
+
+$settings = new ParserSettings("in", 1, ',', 'then');
+$intervalParser = new IntervalParser($settings);
+
+$wordSeparated = 'foo in 9d8h5m bar then baz in 5 minutes then foo in 2 days 4 minutes boo then in 1 hr then 10 days';
+$wordSeparatedIntervals = $intervalParser->findInterval($wordSeparated, IntervalFlags::MULTIPLE_INTERVALS);
+var_dump($wordSeparatedIntervals);
 ```
 
 ---

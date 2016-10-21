@@ -51,9 +51,6 @@ REGEX;
     # Leading separator
     public static $leadingSeparator = "(?<leadingSeparator>\s?(?:in)\s?)";
 
-    # Leading separator with capturing groups
-    public static $leadingGroupSeparator = "/(.*)\s+(?:in)\s+(.*)/ui";
-
     # Regex to match a valid interval, holds the value in $matches['interval']
     public static $intervalOnly = "^(?<interval>(?&timepart)++)$/uix";
 
@@ -89,7 +86,7 @@ REGEX;
     # Regex to handle an input that may have multiple intervals along with leading and/or trailing data
     public static $multipleIntervals = <<<'REGEX'
     ^(?<leading>.*?)?
-     (?&leadingSeparator)?
+     (?<sep>(?&leadingSeparator))?
      (?<interval>(?&timepart)++)
      (?<trailing>.*)
     /uix
@@ -149,8 +146,9 @@ REGEX;
 
         if($flags == (IntervalFlags::REQUIRE_LEADING | IntervalFlags::REQUIRE_TRAILING)){
 
-            # Default leading separator is "in"
-            $leadingSeparation = preg_match(self::$leadingGroupSeparator, $input, $matches, PREG_OFFSET_CAPTURE);
+            $expression = $this->settings->getLeadingSeparatorExpression();
+
+            $leadingSeparation = preg_match($expression, $input, $matches, PREG_OFFSET_CAPTURE);
             if(!$leadingSeparation){
                 throw new FormatException("Allowing leading data requires using a separator. Ie. foo in <interval>");
             }
@@ -190,8 +188,9 @@ REGEX;
 
         if($flags & IntervalFlags::REQUIRE_LEADING){
 
-            # Default leading separator is "in"
-            $leadingSeparation = preg_match(self::$leadingGroupSeparator, $input, $matches, PREG_OFFSET_CAPTURE);
+            $expression = $this->settings->getLeadingSeparatorExpression();
+
+            $leadingSeparation = preg_match($expression, $input, $matches, PREG_OFFSET_CAPTURE);
             if(!$leadingSeparation){
                 throw new FormatException("Allowing leading data requires using a separator. Ie. foo in <interval>");
             }
@@ -288,11 +287,11 @@ REGEX;
                     $matches = array_filter($matches);
 
                     $leadingData = $matches['leading'] ?? null;
-                    $leadingSep  = $matches['leadingSeparator'] ?? false;
+                    $leadingSep  = $matches['sep'] ?? null;
                     $interval    = $matches['interval'] ?? null;
                     $trailing    = $matches['trailing'] ?? null;
 
-                    if(!$leadingData) $leadingData = ($leadingSep) ?: "";
+                    if(!$leadingData) $leadingData = $leadingSep ?? "";
 
                     $intervalOffset = (!$leadingSep) ? 0 : strlen($leadingData) + strlen($leadingSep);
 

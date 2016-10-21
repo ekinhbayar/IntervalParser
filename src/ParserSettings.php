@@ -21,40 +21,52 @@ class ParserSettings
     const SYMBOL = 0b00000000;
     const STRING = 0b00000001;
 
-    private $separationType;
-    private $symbol;
-    private $word;
+    private $multipleSeparationType;
+    private $multipleSeparationSymbol;
+    private $multipleSeparationWord;
+    private $leadingSeparationString;
+    private $keepLeadingSeparator;
 
+    # Leading separator with capturing groups
+    public static $leadingGroupSeparator = "/(.*)\s+(?:in)\s+(.*)/ui";
     public static $symbolSeparator = "/(?<first>[^,]*)\s?,\s?(?<next>.*)$/ui";
     public static $wordSeparator = "/^(?<first>.*?)\s?word\s?(?<next>.*)$/ui";
 
 
-    /**
-     * ParserSettings constructor.
-     *
-     * @param int $separationType
-     * @param string $symbol
-     * @param string|null $word
-     */
     public function __construct(
-        int $separationType = self::SYMBOL,
-        string $symbol  = ',',
-        string $word = null
+        string $leadingSeparationString = "in",
+        bool $keepLeadingSeparator = false,
+        int $multipleSeparationType = self::SYMBOL,
+        string $multipleSeparationSymbol  = ",",
+        string $multipleSeparationWord = null
     )
     {
-        $this->separationType = $separationType;
-        $this->symbol = $symbol;
-        $this->word = $word;
+        $this->leadingSeparationString = $leadingSeparationString;
+        $this->keepLeadingSeparator = $keepLeadingSeparator;
+        $this->multipleSeparationType = $multipleSeparationType;
+        $this->multipleSeparationSymbol = $multipleSeparationSymbol;
+        $this->multipleSeparationWord = $multipleSeparationWord;
+    }
+
+    public function getLeadingSeparator() : string
+    {
+        return $this->leadingSeparationString;
     }
 
     public function getSymbolSeparator() : string
     {
-        return $this->symbol;
+        return $this->multipleSeparationSymbol;
     }
 
     public function getWordSeparator() : string
     {
-        return $this->word;
+        return $this->multipleSeparationWord;
+    }
+
+    public function getLeadingSeparatorExpression() : string
+    {
+        $expression = preg_replace("/in/", $this->getLeadingSeparator(), self::$leadingGroupSeparator);
+        return $expression;
     }
 
     public function getSymbolSeparatorExpression() : string
@@ -69,8 +81,13 @@ class ParserSettings
         return $expression;
     }
 
+    public function keepLeadingSeparator() : bool
+    {
+        return $this->keepLeadingSeparator;
+    }
+
     public function getSeparationType(): string
     {
-        return ($this->separationType == self::STRING) ? 'string' : 'symbol';
+        return ($this->multipleSeparationType == self::STRING) ? 'string' : 'symbol';
     }
 }
