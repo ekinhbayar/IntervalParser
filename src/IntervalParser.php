@@ -11,8 +11,6 @@
 namespace IntervalParser;
 
 use \DateInterval;
-use IntervalParser\IntervalFlags;
-use IntervalParser\ParserSettings;
 
 class IntervalParser
 {
