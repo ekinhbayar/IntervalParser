@@ -8,16 +8,12 @@
  * @author     Ekin H. Bayar <ekin@coproductivity.com>
  * @version    0.2.0
  */
-
 namespace IntervalParser;
 
 use \DateInterval;
-use IntervalParser\IntervalFlags;
-use IntervalParser\ParserSettings;
 
 class IntervalParser
 {
-
     /**
      * Set of regular expressions utilized to match/replace/validate parts of a given input.
      *
@@ -114,6 +110,7 @@ REGEX;
      * @param string $input
      * @param int $flags
      * @return TimeInterval|array
+     * @throws InvalidFlagException
      * @throws FormatException
      */
     public function findInterval(string $input, int $flags = IntervalFlags::INTERVAL_ONLY)
@@ -374,7 +371,7 @@ REGEX;
      *
      * @param string $input
      * @return DateInterval
-     * @throws \InvalidArgumentException
+     * @throws FormatException
      */
     public function parseInterval(string $input): \DateInterval
     {
@@ -390,4 +387,3 @@ REGEX;
         throw new FormatException("Given string is not a valid time interval.");
     }
 }
-

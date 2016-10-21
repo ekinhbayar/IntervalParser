@@ -1,7 +1,6 @@
 <?php
 namespace IntervalParser;
 
-
 class IntervalFlags
 {
     const INTERVAL_ONLY      = 0b00000000;

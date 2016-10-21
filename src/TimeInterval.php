@@ -52,6 +52,4 @@ class TimeInterval
     {
         return $this->trailingData;
     }
-
 }
-
