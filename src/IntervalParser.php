@@ -26,7 +26,7 @@ class IntervalParser
      *
      * @var string $leadingDataSeparator
      */
-    public static $leadingDataSeparator = "/(.*)\s+(?:in)\s+(.*)/ui";
+    public static $leadingDataSeparator = "/(.*)\s+(?:<separator>)\s+(.*)/ui";
 
     /**
      * Used to turn a given non-strtotime-compatible time string into a compatible one
@@ -82,6 +82,23 @@ REGEX;
     public static $intervalWithTrailingData = "^(?<interval>(?&timepart)++)(?<trailing>.+)$/uix";
 
     /**
+     * Store parser settings, like as leading data separator.
+     *
+     * @var ParserSettings
+     */
+    private $parserSettings;
+
+    /**
+     * IntervalParser constructor.
+     *
+     * @param ParserSettings $parserSettings
+     */
+    public function __construct(ParserSettings $parserSettings = null)
+    {
+        $this->parserSettings = $parserSettings;
+    }
+
+    /**
      * Looks for a valid interval along with leading and/or trailing data IF the respective flags are set.
      * TimeInterval is essentially DateInterval with extra information such as interval offset & length, leading/trailing data.
      * TODO: MULTIPLE_INTERVALS is not yet implemented.
@@ -111,8 +128,8 @@ REGEX;
 
         if($flags == (IntervalFlags::REQUIRE_LEADING | IntervalFlags::REQUIRE_TRAILING)){
 
-            # Requires the "in" separator, TODO: allow at|this|next too
-            $leadingSeparation = preg_match(self::$leadingDataSeparator, $input, $matches, PREG_OFFSET_CAPTURE);
+            $pattern = str_replace('<separator>', $this->getParserSettings()->leadingDataSeparator, self::$leadingDataSeparator);
+            $leadingSeparation = preg_match($pattern, $input, $matches, PREG_OFFSET_CAPTURE);
             if(!$leadingSeparation){
                 throw new \Error("Allowing leading data requires using a separator. Ie. foo in <interval>");
             }
@@ -151,8 +168,8 @@ REGEX;
 
         if($flags & IntervalFlags::REQUIRE_LEADING){
 
-            # Requires the "in" separator, TODO: allow at|this|next too
-            $leadingSeparation = preg_match(self::$leadingDataSeparator, $input, $matches, PREG_OFFSET_CAPTURE);
+            $pattern = str_replace('<separator>', $this->getParserSettings()->leadingDataSeparator, self::$leadingDataSeparator);
+            $leadingSeparation = preg_match($pattern, $input, $matches, PREG_OFFSET_CAPTURE);
             if(!$leadingSeparation){
                 throw new \Error("Allowing leading data requires using a separator. Ie. foo in <interval>");
             }
@@ -296,5 +313,24 @@ REGEX;
         throw new \InvalidArgumentException("Given string is not a valid time interval.");
     }
 
+    /**
+     * @return ParserSettings
+     */
+    public function getParserSettings(): ParserSettings
+    {
+        if (!($this->parserSettings instanceof ParserSettings)) {
+            $this->parserSettings = new ParserSettings();
+        }
+
+        return $this->parserSettings;
+    }
+
+    /**
+     * @param ParserSettings $parserSettings
+     */
+    public function setParserSettings(ParserSettings $parserSettings)
+    {
+        $this->parserSettings = $parserSettings;
+    }
 }
 
