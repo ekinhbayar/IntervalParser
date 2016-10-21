@@ -18,7 +18,7 @@ class TimeInterval
         int $intervalLength,
         string $leadingData  = null,
         string $trailingData = null,
-        mixed $interval
+        $interval
     )
     {
         $this->interval = $interval;
