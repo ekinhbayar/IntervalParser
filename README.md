@@ -85,6 +85,24 @@ $dateInterval = $intervalParser->parseInterval($onlyInterval);
 var_dump($dateInterval);
 ```
 
+**Parser Settings**
+
+You can set parser settings. Example
+
+```php
+$leading  = 'foo >> 9w8d7h6m5s';
+$both = 'foo >> 9d8h5m bar';
+
+$intervalParser = new IntervalParser();
+$intervalParser->getParserSettings()->leadingDataSeparator = '>>';
+
+$intervalAndLeading = $intervalParser->findInterval($leading, IntervalFlags::REQUIRE_LEADING);
+var_dump($intervalAndLeading);
+
+$intervalWithBoth = $intervalParser->findInterval($both, IntervalFlags::REQUIRE_TRAILING | IntervalFlags::REQUIRE_LEADING);
+var_dump($timeIntervalWithBoth);
+```
+
 ---
 
 Thanks a ton to [Pieter](https://github.com/PeeHaa), [Chris](https://github.com/DaveRandom), [Bob](https://github.com/bwoebi),  [Paul](https://github.com/pcrov) for everything they made me learn and for all their help! :-)
