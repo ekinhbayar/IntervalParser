@@ -135,7 +135,7 @@ REGEX;
 
                 # create and return the interval object
                 $interval = DateInterval::createFromDateString($input);
-                return new TimeInterval($intervalOffset, $intervalLength, null, null, $interval);
+                return new TimeInterval($interval, $intervalOffset, $intervalLength);
             }
 
             throw new FormatException("Given input is not a valid interval.");
@@ -177,7 +177,7 @@ REGEX;
 
                 # create and return the interval object
                 $interval = DateInterval::createFromDateString($interval);
-                return new TimeInterval($intervalOffset, $intervalLength, $leadingData, $trailingData,  $interval);
+                return new TimeInterval($interval, $intervalOffset, $intervalLength, $leadingData, $trailingData);
             }
 
             throw new FormatException("Given input does not contain a valid interval and/or trailing data.");
@@ -218,7 +218,7 @@ REGEX;
 
                 # create the interval object
                 $interval = DateInterval::createFromDateString($interval);
-                return new TimeInterval($intervalOffset, $intervalLength, $leadingData, null, $interval);
+                return new TimeInterval($interval, $intervalOffset, $intervalLength, $leadingData);
             }
 
             throw new FormatException("Given input does not contain a valid interval. Keep in mind trailing data is not allowed with current flag.");
@@ -250,7 +250,7 @@ REGEX;
 
                 # create the interval object
                 $interval = DateInterval::createFromDateString($interval);
-                return new TimeInterval($intervalOffset, $intervalLength, null, $trailingData, $interval);
+                return new TimeInterval($interval, $intervalOffset, $intervalLength, null, $trailingData);
             }
 
             throw new FormatException("Given input does not contain a valid interval. Keep in mind leading data is not allowed with current flag.");
@@ -304,7 +304,7 @@ REGEX;
                         $intervalLength = strlen($interval);
                         # create the interval object
                         $interval = DateInterval::createFromDateString($interval);
-                        $payload[] =  new TimeInterval($intervalOffset, $intervalLength, $leadingData, $trailingData, $interval);
+                        $payload[] =  new TimeInterval($interval, $intervalOffset, $intervalLength, $leadingData, $trailingData);
                     }
                 }
 

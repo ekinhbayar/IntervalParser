@@ -14,11 +14,11 @@ class TimeInterval
     private $interval;
 
     public function __construct(
+        $interval,
         int $intervalOffset,
         int $intervalLength,
         string $leadingData  = null,
-        string $trailingData = null,
-        $interval
+        string $trailingData = null
     )
     {
         $this->interval = $interval;
