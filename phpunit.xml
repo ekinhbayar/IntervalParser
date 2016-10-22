@@ -1,0 +1,7 @@
+<phpunit bootstrap="tests/_bootstrap.php">
+    <testsuites>
+        <testsuite name="IntervalParserTests">
+            <directory>tests/IntervalParserTests</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>
