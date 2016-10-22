@@ -38,7 +38,7 @@ REGEX;
     private $normalizer;
 
     /**
-     * IntervalParser constructor.
+     * IntervalFinder constructor.
      *
      * Default settings are :
      *
