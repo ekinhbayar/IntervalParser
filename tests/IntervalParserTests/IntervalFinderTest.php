@@ -2,13 +2,21 @@
 
 namespace IntervalParserTests;
 
+use IntervalParser\IntervalFinder;
 use IntervalParser\IntervalFlags;
-use IntervalParser\IntervalParser;
+use IntervalParser\Normalizer;
 use IntervalParser\ParserSettings;
 use IntervalParser\TimeInterval;
 
-class IntervalParserTest extends \PHPUnit_Framework_TestCase
+class IntervalFinderTest extends \PHPUnit_Framework_TestCase
 {
+    private $intervalFinder;
+
+    public function setUp()
+    {
+        $this->intervalFinder = new IntervalFinder(new ParserSettings(), new Normalizer());
+    }
+
     /**
      * Data provider for interval parser with trailing data
      *
@@ -27,11 +35,9 @@ class IntervalParserTest extends \PHPUnit_Framework_TestCase
      *
      * @dataProvider trailingDataProvider
      */
-    public function testFindIntervalWithTrailingData(string $input, TimeInterval $expectedTimeInterval)
+    public function testFindWithTrailingData(string $input, TimeInterval $expectedTimeInterval)
     {
-        $intervalParser = new IntervalParser(new ParserSettings());
-
-        $timeInterval = $intervalParser->findInterval($input, IntervalFlags::REQUIRE_TRAILING);
+        $timeInterval = $this->intervalFinder->find($input, IntervalFlags::REQUIRE_TRAILING);
 
         $this->assertEquals($expectedTimeInterval, $timeInterval);
     }
@@ -54,11 +60,9 @@ class IntervalParserTest extends \PHPUnit_Framework_TestCase
      *
      * @dataProvider leadingDataProvider
      */
-    public function testFindIntervalWithLeadingData(string $input, TimeInterval $expectedTimeInterval)
+    public function testFindWithLeadingData(string $input, TimeInterval $expectedTimeInterval)
     {
-        $intervalParser = new IntervalParser(new ParserSettings());
-
-        $timeInterval = $intervalParser->findInterval($input, IntervalFlags::REQUIRE_LEADING);
+        $timeInterval = $this->intervalFinder->find($input, IntervalFlags::REQUIRE_LEADING);
 
         $this->assertEquals($expectedTimeInterval, $timeInterval);
     }
@@ -81,11 +85,12 @@ class IntervalParserTest extends \PHPUnit_Framework_TestCase
      *
      * @dataProvider bothDataProvider
      */
-    public function testFindIntervalWithLeadingAndTrailingData(string $input, TimeInterval $expectedTimeInterval)
+    public function testFindWithLeadingAndTrailingData(string $input, TimeInterval $expectedTimeInterval)
     {
-        $intervalParser = new IntervalParser(new ParserSettings());
-
-        $timeInterval = $intervalParser->findInterval($input, IntervalFlags::REQUIRE_TRAILING|IntervalFlags::REQUIRE_LEADING);
+        $timeInterval = $this->intervalFinder->find(
+            $input,
+            IntervalFlags::REQUIRE_TRAILING|IntervalFlags::REQUIRE_LEADING
+        );
 
         $this->assertEquals($expectedTimeInterval, $timeInterval);
     }

@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 /**
- * Main IntervalParser class
+ * Finds intervals inside strings
  *
  * PHP version 7+
  *
@@ -10,83 +10,32 @@
  */
 namespace IntervalParser;
 
-use \DateInterval;
-
-class IntervalParser
+class IntervalFinder
 {
-    /**
-     * Set of regular expressions utilized to match/replace/validate parts of a given input.
-     *
-     * Don't forget to close parentheses when using $define
-     */
-    public static $define = "/(?(DEFINE)";
-
-    # Definitions of sub patterns for a valid interval
-    public static $integer  = <<<'REGEX'
-    (?<integer>
-       (?:\G|(?!\n))
-       (\s*\b)?
-       \d{1,5}
-       \s*
-    )
-REGEX;
-
-    # Starts with integer followed by time specified
-    public static $timepart = <<<'REGEX'
-    (?<timepart>
-       (?&integer)
-       ( s(ec(ond)?s?)?
-       | m(on(ths?)?|in(ute)?s?)?
-       | h(rs?|ours?)?
-       | d(ays?)?
-       | w(eeks?)?
-       )
-      )
-REGEX;
-
     # Leading separator
-    public static $leadingSeparator = "(?<leadingSeparator>\s?(?:in)\s?)";
-
-    # Regex to match a valid interval, holds the value in $matches['interval']
-    public static $intervalOnly = "^(?<interval>(?&timepart)++)$/uix";
+    const LEADING_SEPARATOR = "(?<leadingSeparator>\s?(?:in)\s?)";
 
     # Regex to match a valid interval and any trailing string, holds the interval in $matches['interval'], the rest in $matches['trailing']
-    public static $intervalWithTrailingData = "^(?<interval>(?&timepart)++)(?<trailing>.+)*?$/uix";
-
-    /**
-     * Used to turn a given non-strtotime-compatible time string into a compatible one
-     * Only modifies the non-strtotime-compatible time strings provided leaving the rest intact
-     *
-     * @var string $normalizerExpression
-     */
-    public static $normalizerExpression = <<<'REGEX'
-    ~
-    # grab the integer part of time string
-    \s? (?<int> \d{1,5}) \s?
-    # match only the shortest abbreviations that aren't supported by strtotime
-    (?<time>
-      (?: s (?=(?:ec(?:ond)?s?)?(?:\b|\d))
-        | m (?=(?:in(?:ute)?s?)?(?:\b|\d))
-        | h (?=(?:(?:ou)?rs?)?(?:\b|\d))
-        | d (?=(?:ays?)?(?:\b|\d))
-        | w (?=(?:eeks?)?(?:\b|\d))
-        | mon (?=(?:(?:th)?s?)?(?:\b|\d))
-      )
-    )
-    [^\d]*?(?=\b|\d)
-    # do only extract start of string
-    | (?<text> .+)
-    ~uix
-REGEX;
+    const INTERVAL_WITH_TRAILING_DATA = "^(?<interval>(?&timepart)++)(?<trailing>.+)*?$/uix";
 
     # Regex to handle an input that may have multiple intervals along with leading and/or trailing data
-    public static $multipleIntervals = <<<'REGEX'
+    const MULTIPLE_INTERVALS = <<<'REGEX'
     ^(?<leading>.*?)?
      (?<sep>(?&leadingSeparator))?
      (?<interval>(?&timepart)++)
      (?<trailing>.*)
     /uix
 REGEX;
+
+    /**
+     * @var ParserSettings
+     */
+    private $settings;
+
+    /**
+     * @var Normalizer
+     */
+    private $normalizer;
 
     /**
      * IntervalParser constructor.
@@ -97,10 +46,12 @@ REGEX;
      *  string $wordSeparator = null
      *
      * @param \IntervalParser\ParserSettings $settings
+     * @param \IntervalParser\Normalizer $normalizer
      */
-    public function __construct(ParserSettings $settings)
+    public function __construct(ParserSettings $settings, Normalizer $normalizer)
     {
-        $this->settings = $settings;
+        $this->settings   = $settings;
+        $this->normalizer = $normalizer;
     }
 
     /**
@@ -113,7 +64,7 @@ REGEX;
      * @throws InvalidFlagException
      * @throws FormatException
      */
-    public function findInterval(string $input, int $flags = IntervalFlags::INTERVAL_ONLY)
+    public function find(string $input, int $flags = IntervalFlags::INTERVAL_ONLY)
     {
         if( $flags
             & ~IntervalFlags::INTERVAL_ONLY
@@ -124,17 +75,17 @@ REGEX;
 
         if($flags & IntervalFlags::INTERVAL_ONLY){
 
-            $input = $this->normalizeTimeInterval($input);
+            $input = $this->normalizer->normalize($input);
 
-            $definition = self::$define . self::$integer . self::$timepart .')';
-            $expression = $definition . self::$intervalOnly;
+            $definition = Pattern::DEFINE . Pattern::INTEGER . Pattern::TIME_PART .')';
+            $expression = $definition . Pattern::INTERVAL_ONLY;
 
             if(preg_match($expression, $input)){
                 $intervalOffset = 0;
                 $intervalLength = strlen($input);
 
                 # create and return the interval object
-                $interval = DateInterval::createFromDateString($input);
+                $interval = \DateInterval::createFromDateString($input);
                 return new TimeInterval($interval, $intervalOffset, $intervalLength);
             }
 
@@ -164,10 +115,10 @@ REGEX;
             $intervalOffset = $matches[2][1] ?? null;
 
             # If interval contains non-strtotime-compatible abbreviations, replace 'em
-            $intervalAndTrailingData = $this->normalizeTimeInterval($intervalAndTrailingData);
+            $intervalAndTrailingData = $this->normalizer->normalize($intervalAndTrailingData);
 
-            $definition = self::$define . self::$integer . self::$timepart .')';
-            $expression = $definition . self::$intervalWithTrailingData;
+            $definition = Pattern::DEFINE . Pattern::INTEGER . Pattern::TIME_PART .')';
+            $expression = $definition . self::INTERVAL_WITH_TRAILING_DATA;
 
             if(preg_match($expression, $intervalAndTrailingData, $parts)){
 
@@ -176,7 +127,7 @@ REGEX;
                 $intervalLength = strlen($interval);
 
                 # create and return the interval object
-                $interval = DateInterval::createFromDateString($interval);
+                $interval = \DateInterval::createFromDateString($interval);
                 return new TimeInterval($interval, $intervalOffset, $intervalLength, $leadingData, $trailingData);
             }
 
@@ -206,18 +157,18 @@ REGEX;
             $intervalOffset = $matches[2][1] ?? null;
 
             # If interval contains non-strtotime-compatible abbreviations, replace 'em
-            $safeInterval = $this->normalizeTimeInterval($intervalAndPossibleTrailingData);
+            $safeInterval = $this->normalizer->normalize($intervalAndPossibleTrailingData);
 
             # since above normalization is expected to not return any trailing data, only check for a valid interval
-            $definition = self::$define . self::$integer . self::$timepart .')';
-            $expression = $definition . self::$intervalOnly;
+            $definition = Pattern::DEFINE . Pattern::INTEGER . Pattern::TIME_PART .')';
+            $expression = $definition . Pattern::INTERVAL_ONLY;
 
             if(preg_match($expression, $safeInterval, $parts)){
                 $interval = $parts['interval'];
                 $intervalLength = strlen($interval);
 
                 # create the interval object
-                $interval = DateInterval::createFromDateString($interval);
+                $interval = \DateInterval::createFromDateString($interval);
                 return new TimeInterval($interval, $intervalOffset, $intervalLength, $leadingData);
             }
 
@@ -226,11 +177,11 @@ REGEX;
 
         if($flags & IntervalFlags::REQUIRE_TRAILING){
 
-            $definition = self::$define . self::$integer . self::$timepart .')';
-            $expression = $definition . self::$intervalWithTrailingData;
+            $definition = Pattern::DEFINE . Pattern::INTEGER . Pattern::TIME_PART .')';
+            $expression = $definition . self::INTERVAL_WITH_TRAILING_DATA;
 
             # If interval contains non-strtotime-compatible abbreviations, replace 'em
-            $safeInterval = $this->normalizeTimeInterval($input);
+            $safeInterval = $this->normalizer->normalize($input);
 
             # Separate interval from trailing data
             if(preg_match($expression, $safeInterval, $parts)){
@@ -249,7 +200,7 @@ REGEX;
                 $intervalOffset = 0; # since we don't allow leading data here
 
                 # create the interval object
-                $interval = DateInterval::createFromDateString($interval);
+                $interval = \DateInterval::createFromDateString($interval);
                 return new TimeInterval($interval, $intervalOffset, $intervalLength, null, $trailingData);
             }
 
@@ -277,8 +228,8 @@ REGEX;
 
                 foreach($intervalSet as $key => $interval){
 
-                    $definition = self::$define . self::$leadingSeparator . self::$integer . self::$timepart .')';
-                    $expression = $definition . self::$multipleIntervals;
+                    $definition = Pattern::DEFINE . self::LEADING_SEPARATOR . Pattern::INTEGER . Pattern::TIME_PART .')';
+                    $expression = $definition . self::MULTIPLE_INTERVALS;
 
                     preg_match($expression, $interval, $matches);
                     $matches = array_filter($matches);
@@ -293,7 +244,7 @@ REGEX;
                     $intervalOffset = (!$leadingSep) ? 0 : strlen($leadingData) + strlen($leadingSep);
 
                     # If interval contains non-strtotime-compatible abbreviations, replace them
-                    $safeInterval = $this->normalizeTimeInterval($interval . $trailing);
+                    $safeInterval = $this->normalizer->normalize($interval . $trailing);
 
                     # Separate intervals from trailing data
                     if(preg_match($expression, $safeInterval, $parts)){
@@ -303,7 +254,7 @@ REGEX;
 
                         $intervalLength = strlen($interval);
                         # create the interval object
-                        $interval = DateInterval::createFromDateString($interval);
+                        $interval = \DateInterval::createFromDateString($interval);
                         $payload[] =  new TimeInterval($interval, $intervalOffset, $intervalLength, $leadingData, $trailingData);
                     }
                 }
@@ -311,79 +262,5 @@ REGEX;
                 if($payload) return $payload;
             }
         }
-    }
-
-    /**
-     * Turns any non-strtotime-compatible time string into a compatible one.
-     * If the passed input has trailing data, it won't be lost since within the callback the input is reassembled.
-     * However no leading data is accepted.
-     *
-     * @param string $input
-     * @return string
-     */
-    public function normalizeTimeInterval(string $input): string
-    {
-        $output = preg_replace_callback(self::$normalizerExpression,
-            function ($matches) {
-                $int = $matches['int'];
-                switch ($matches['time']) {
-                    case 's':
-                        $t = ($int == 1) ? ' second ' : ' seconds ';
-                        break;
-                    case 'm':
-                        $t = ($int == 1) ? ' minute ' : ' minutes ';
-                        break;
-                    case 'h':
-                        $t = ($int == 1) ? ' hour ' : ' hours ';
-                        break;
-                    case 'd':
-                        $t = ($int == 1) ? ' day ' : ' days ';
-                        break;
-                    case 'w':
-                        $t = ($int == 1) ? ' week ' : ' weeks ';
-                        break;
-                    case 'mon':
-                        $t = ($int == 1) ? ' month ' : ' months ';
-                        break;
-                    case 'y':
-                        $t = ($int == 1) ? ' year ' : ' years ';
-                        break;
-                }
-
-                $t = $t ?? '';
-                # rebuild the interval string
-                $time = $int . $t;
-
-                if(isset($matches['text'])){
-                    $time .= trim($matches['text']);
-                }
-
-                return $time;
-
-            }, $input);
-
-        return trim($output);
-    }
-
-    /**
-     * Normalizes any non-strtotime-compatible time string, then validates the interval and returns a DateInterval object.
-     * No leading or trailing data is accepted.
-     *
-     * @param string $input
-     * @return DateInterval
-     * @throws FormatException
-     */
-    public function parseInterval(string $input): \DateInterval
-    {
-        $input = trim($this->normalizeTimeInterval($input));
-
-        $definition = self::$define . self::$integer . self::$timepart .')';
-        $expression = $definition . self::$intervalOnly;
-
-        if(preg_match($expression, $input, $matches)){
-            return DateInterval::createFromDateString($input);
-        }
-
-        throw new FormatException("Given string is not a valid time interval.");
     }
 }
