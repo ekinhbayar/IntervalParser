@@ -1,6 +1,6 @@
-<?php
-namespace IntervalParser;
+<?php declare(strict_types=1);
 
+namespace IntervalParser;
 
 class IntervalFlags
 {
