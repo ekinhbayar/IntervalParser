@@ -35,21 +35,21 @@ class TimeInterval
 
     public function getIntervalOffset() : int
     {
-        return $this->intervalOffset;
+        return (int) $this->intervalOffset;
     }
 
     public function getIntervalLength() : int
     {
-        return $this->intervalLength;
+        return (int) $this->intervalLength;
     }
 
     public function getLeadingData() : string
     {
-        return $this->leadingData;
+        return (string) $this->leadingData;
     }
 
     public function getTrailingData() : string
     {
-        return $this->trailingData;
+        return (string) $this->trailingData;
     }
 }
