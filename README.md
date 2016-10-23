@@ -1,6 +1,8 @@
 # IntervalParser
 
 [![Build Status](https://travis-ci.org/ekinhbayar/IntervalParser.svg?branch=master)](https://travis-ci.org/ekinhbayar/IntervalParser)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/ekinhbayar/IntervalParser/badges/quality-score.png?b=scrutinizer-setup)](https://scrutinizer-ci.com/g/ekinhbayar/IntervalParser/?branch=scrutinizer-setup)
+[![Code Coverage](https://scrutinizer-ci.com/g/ekinhbayar/IntervalParser/badges/coverage.png?b=scrutinizer-setup)](https://scrutinizer-ci.com/g/ekinhbayar/IntervalParser/?branch=scrutinizer-setup)
 
 This is a work in progress.
 
