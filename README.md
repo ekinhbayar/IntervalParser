@@ -1,5 +1,7 @@
 # IntervalParser
 
+[![Build Status](https://travis-ci.org/ekinhbayar/IntervalParser.svg?branch=master)](https://travis-ci.org/ekinhbayar/IntervalParser)
+
 This is a work in progress.
 
 ---
