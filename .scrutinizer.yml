@@ -46,5 +46,5 @@ build:
             -
                 command: 'phpdbg -qrr vendor/bin/phpunit --coverage-text --coverage-clover=some-file'
                 coverage:
-                    file: 'coverage.clover'
+                    file: 'some-file'
                     format: 'clover'
