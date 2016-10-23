@@ -45,6 +45,3 @@ build:
         override:
             -
                 command: 'phpdbg -qrr vendor/bin/phpunit --coverage-text'
-                coverage:
-                    file: 'coverage.clover'
-                    format: 'clover'
