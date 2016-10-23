@@ -1,4 +1,4 @@
-<?php declare(strict_types=1);
+<?php declare(strict_types = 1);
 /**
  * Time string normalizer
  *
@@ -49,7 +49,7 @@ REGEX;
     public function normalize(string $input): string
     {
         $output = preg_replace_callback(self::$pattern,
-            function ($matches) {
+            function($matches) {
                 $int = $matches['int'];
                 switch ($matches['time']) {
                     case 's':
@@ -79,7 +79,7 @@ REGEX;
                 # rebuild the interval string
                 $time = $int . $t;
 
-                if(isset($matches['text'])){
+                if (isset($matches['text'])) {
                     $time .= trim($matches['text']);
                 }
 

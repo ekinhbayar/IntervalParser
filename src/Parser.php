@@ -1,4 +1,4 @@
-<?php declare(strict_types=1);
+<?php declare(strict_types = 1);
 /**
  * Main IntervalParser class
  *
@@ -39,10 +39,10 @@ class Parser
     {
         $input = trim($this->normalizer->normalize($input));
 
-        $definition = Pattern::DEFINE . Pattern::INTEGER . Pattern::TIME_PART .')';
+        $definition = Pattern::DEFINE . Pattern::INTEGER . Pattern::TIME_PART . ')';
         $expression = $definition . Pattern::INTERVAL_ONLY;
 
-        if(preg_match($expression, $input, $matches)){
+        if (preg_match($expression, $input, $matches)) {
             return \DateInterval::createFromDateString($input);
         }
 

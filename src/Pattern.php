@@ -1,4 +1,4 @@
-<?php declare(strict_types=1);
+<?php declare(strict_types = 1);
 /**
  * Set of regular expressions utilized to match/replace/validate parts of a given input.
  *
@@ -18,7 +18,7 @@ class Pattern
     const DEFINE = "/(?(DEFINE)";
 
     # Definitions of sub patterns for a valid interval
-    const INTEGER  = <<<'REGEX'
+    const INTEGER = <<<'REGEX'
     (?<integer>
        (?:\G|(?!\n))
        (\s*\b)?
