@@ -1,4 +1,4 @@
-<?php declare(strict_types=1);
+<?php declare(strict_types = 1);
 /** Parser Settings
  *
  * IntervalParser takes a ParserSettings object which is handy for when you want to deal with multiple intervals.
@@ -37,7 +37,7 @@ class ParserSettings
         string $leadingSeparationString = "in",
         bool $keepLeadingSeparator = false,
         int $multipleSeparationType = self::SYMBOL,
-        string $multipleSeparationSymbol  = ",",
+        string $multipleSeparationSymbol = ",",
         string $multipleSeparationWord = null
     )
     {

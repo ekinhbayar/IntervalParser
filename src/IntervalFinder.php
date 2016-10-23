@@ -1,4 +1,4 @@
-<?php declare(strict_types=1);
+<?php declare(strict_types = 1);
 /**
  * Finds intervals inside strings
  *
@@ -66,21 +66,21 @@ REGEX;
      */
     public function find(string $input, int $flags = IntervalFlags::INTERVAL_ONLY)
     {
-        if( $flags
+        if ($flags
             & ~IntervalFlags::INTERVAL_ONLY
             & ~IntervalFlags::REQUIRE_TRAILING
             & ~IntervalFlags::REQUIRE_LEADING
             & ~IntervalFlags::MULTIPLE_INTERVALS
-        ){  throw new InvalidFlagException("You have tried to use an invalid flag combination."); }
+        ) {  throw new InvalidFlagException("You have tried to use an invalid flag combination."); }
 
-        if($flags & IntervalFlags::INTERVAL_ONLY){
+        if ($flags & IntervalFlags::INTERVAL_ONLY) {
 
             $input = $this->normalizer->normalize($input);
 
-            $definition = Pattern::DEFINE . Pattern::INTEGER . Pattern::TIME_PART .')';
+            $definition = Pattern::DEFINE . Pattern::INTEGER . Pattern::TIME_PART . ')';
             $expression = $definition . Pattern::INTERVAL_ONLY;
 
-            if(preg_match($expression, $input)){
+            if (preg_match($expression, $input)) {
                 $intervalOffset = 0;
                 $intervalLength = strlen($input);
 
@@ -92,12 +92,12 @@ REGEX;
             throw new FormatException("Given input is not a valid interval.");
         }
 
-        if($flags == (IntervalFlags::REQUIRE_LEADING | IntervalFlags::REQUIRE_TRAILING)){
+        if ($flags == (IntervalFlags::REQUIRE_LEADING | IntervalFlags::REQUIRE_TRAILING)) {
 
             $expression = $this->settings->getLeadingSeparatorExpression();
 
             $leadingSeparation = preg_match($expression, $input, $matches, PREG_OFFSET_CAPTURE);
-            if(!$leadingSeparation){
+            if (!$leadingSeparation) {
                 throw new FormatException("Allowing leading data requires using a separator. Ie. foo in <interval>");
             }
 
@@ -105,10 +105,10 @@ REGEX;
             $intervalAndTrailingData = $matches[2][0] ?? null;
 
             # throw early for missing parts
-            if(!$leadingData){
+            if (!$leadingData) {
                 throw new FormatException("Given input does not contain a valid leading data.");
             }
-            if(!$intervalAndTrailingData){
+            if (!$intervalAndTrailingData) {
                 throw new FormatException("Given input does not contain a valid interval and/or trailing data.");
             }
 
@@ -117,10 +117,10 @@ REGEX;
             # If interval contains non-strtotime-compatible abbreviations, replace 'em
             $intervalAndTrailingData = $this->normalizer->normalize($intervalAndTrailingData);
 
-            $definition = Pattern::DEFINE . Pattern::INTEGER . Pattern::TIME_PART .')';
+            $definition = Pattern::DEFINE . Pattern::INTEGER . Pattern::TIME_PART . ')';
             $expression = $definition . self::INTERVAL_WITH_TRAILING_DATA;
 
-            if(preg_match($expression, $intervalAndTrailingData, $parts)){
+            if (preg_match($expression, $intervalAndTrailingData, $parts)) {
 
                 $interval = $parts['interval'];
                 $trailingData   = $parts['trailing'];
@@ -134,23 +134,23 @@ REGEX;
             throw new FormatException("Given input does not contain a valid interval and/or trailing data.");
         }
 
-        if($flags & IntervalFlags::REQUIRE_LEADING){
+        if ($flags & IntervalFlags::REQUIRE_LEADING) {
 
             $expression = $this->settings->getLeadingSeparatorExpression();
 
             $leadingSeparation = preg_match($expression, $input, $matches, PREG_OFFSET_CAPTURE);
-            if(!$leadingSeparation){
+            if (!$leadingSeparation) {
                 throw new FormatException("Allowing leading data requires using a separator. Ie. foo in <interval>");
             }
 
             $leadingData = $matches[1][0] ?? null;
             $intervalAndPossibleTrailingData = $matches[2][0] ?? null;
 
-            if(!$leadingData){
+            if (!$leadingData) {
                 throw new FormatException("Could not find any valid leading data.");
             }
 
-            if(!$intervalAndPossibleTrailingData){
+            if (!$intervalAndPossibleTrailingData) {
                 throw new FormatException("Could not find any valid interval and/or leading data.");
             }
 
@@ -160,10 +160,10 @@ REGEX;
             $safeInterval = $this->normalizer->normalize($intervalAndPossibleTrailingData);
 
             # since above normalization is expected to not return any trailing data, only check for a valid interval
-            $definition = Pattern::DEFINE . Pattern::INTEGER . Pattern::TIME_PART .')';
+            $definition = Pattern::DEFINE . Pattern::INTEGER . Pattern::TIME_PART . ')';
             $expression = $definition . Pattern::INTERVAL_ONLY;
 
-            if(preg_match($expression, $safeInterval, $parts)){
+            if (preg_match($expression, $safeInterval, $parts)) {
                 $interval = $parts['interval'];
                 $intervalLength = strlen($interval);
 
@@ -175,24 +175,24 @@ REGEX;
             throw new FormatException("Given input does not contain a valid interval. Keep in mind trailing data is not allowed with current flag.");
         }
 
-        if($flags & IntervalFlags::REQUIRE_TRAILING){
+        if ($flags & IntervalFlags::REQUIRE_TRAILING) {
 
-            $definition = Pattern::DEFINE . Pattern::INTEGER . Pattern::TIME_PART .')';
+            $definition = Pattern::DEFINE . Pattern::INTEGER . Pattern::TIME_PART . ')';
             $expression = $definition . self::INTERVAL_WITH_TRAILING_DATA;
 
             # If interval contains non-strtotime-compatible abbreviations, replace 'em
             $safeInterval = $this->normalizer->normalize($input);
 
             # Separate interval from trailing data
-            if(preg_match($expression, $safeInterval, $parts)){
+            if (preg_match($expression, $safeInterval, $parts)) {
                 $trailingData = $parts['trailing'] ?? null;
                 $interval = $parts['interval'] ?? null;
 
-                if(!$interval){
+                if (!$interval) {
                     throw new FormatException("Could not find any valid interval.");
                 }
 
-                if(!$trailingData){
+                if (!$trailingData) {
                     throw new FormatException("Could not find any valid trailing data.");
                 }
 
@@ -207,7 +207,7 @@ REGEX;
             throw new FormatException("Given input does not contain a valid interval. Keep in mind leading data is not allowed with current flag.");
         }
 
-        if($flags & IntervalFlags::MULTIPLE_INTERVALS){
+        if ($flags & IntervalFlags::MULTIPLE_INTERVALS) {
 
             $payload = [];
             $separator = ($this->settings->getSeparationType() == 'symbol')
@@ -216,19 +216,19 @@ REGEX;
 
             $expression = "/(?J)\b(?:(?<match>.*?)\s?{$separator})\s?|\b(?<match>.*)/ui";
 
-            if(preg_match_all($expression, $input, $intervals, PREG_SET_ORDER)){
+            if (preg_match_all($expression, $input, $intervals, PREG_SET_ORDER)) {
 
-                $intervalSet = array_filter(array_map(function($set){
-                    foreach($iter = new IntervalIterator($set) as $key => $interval){
-                        if($iter->key() === 'match') {
+                $intervalSet = array_filter(array_map(function($set) {
+                    foreach ($iter = new IntervalIterator($set) as $key => $interval) {
+                        if ($iter->key() === 'match') {
                             return $interval;
                         }
                     }
                 }, $intervals));
 
-                foreach($intervalSet as $key => $interval){
+                foreach ($intervalSet as $key => $interval) {
 
-                    $definition = Pattern::DEFINE . self::LEADING_SEPARATOR . Pattern::INTEGER . Pattern::TIME_PART .')';
+                    $definition = Pattern::DEFINE . self::LEADING_SEPARATOR . Pattern::INTEGER . Pattern::TIME_PART . ')';
                     $expression = $definition . self::MULTIPLE_INTERVALS;
 
                     preg_match($expression, $interval, $matches);
@@ -239,7 +239,7 @@ REGEX;
                     $interval    = $matches['interval'] ?? null;
                     $trailing    = $matches['trailing'] ?? null;
 
-                    if(!$leadingData) $leadingData = $leadingSep ?? "";
+                    if (!$leadingData) $leadingData = $leadingSep ?? "";
 
                     $intervalOffset = (!$leadingSep) ? 0 : strlen($leadingData) + strlen($leadingSep);
 
@@ -247,19 +247,19 @@ REGEX;
                     $safeInterval = $this->normalizer->normalize($interval . $trailing);
 
                     # Separate intervals from trailing data
-                    if(preg_match($expression, $safeInterval, $parts)){
+                    if (preg_match($expression, $safeInterval, $parts)) {
                         $trailingData = $parts['trailing'] ?? null;
                         $interval = $parts['interval'] ?? null;
-                        if(!$interval) continue;
+                        if (!$interval) continue;
 
                         $intervalLength = strlen($interval);
                         # create the interval object
                         $interval = \DateInterval::createFromDateString($interval);
-                        $payload[] =  new TimeInterval($interval, $intervalOffset, $intervalLength, $leadingData, $trailingData);
+                        $payload[] = new TimeInterval($interval, $intervalOffset, $intervalLength, $leadingData, $trailingData);
                     }
                 }
 
-                if($payload) return $payload;
+                if ($payload) return $payload;
             }
         }
     }
