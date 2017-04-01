@@ -52,7 +52,7 @@ REGEX;
 
     public static $intervalOnly = "^(?<interval>(?&timepart)++)$/uix";
 
-    public static $intervalWithTrailingData = "^(?<interval>(?&timepart)++)(?<trailing>.+)$/uix";
+    public static $intervalWithTrailingData = "^(?<interval>(?&timepart)++)(?<trailing>.*)$/uix";
 
     /**
      * Used to turn a given non-strtotime-compatible time string into a compatible one
