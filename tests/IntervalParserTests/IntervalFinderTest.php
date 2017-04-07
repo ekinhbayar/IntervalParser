@@ -7,8 +7,9 @@ use IntervalParser\IntervalFlags;
 use IntervalParser\Normalizer;
 use IntervalParser\ParserSettings;
 use IntervalParser\TimeInterval;
+use PHPUnit\Framework\TestCase;
 
-class IntervalFinderTest extends \PHPUnit_Framework_TestCase
+class IntervalFinderTest extends TestCase
 {
     private $intervalFinder;
 

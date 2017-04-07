@@ -4,8 +4,9 @@ namespace IntervalIteratorTest;
 
 
 use IntervalParser\IntervalIterator;
+use PHPUnit\Framework\TestCase;
 
-class IntervalIteratorTest extends \PHPUnit_Framework_TestCase
+class IntervalIteratorTest extends TestCase
 {
     public function testNext()
     {
