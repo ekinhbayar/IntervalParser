@@ -28,17 +28,17 @@ class ParserSettings
     private $keepLeadingSeparator;
 
     # Leading separator with capturing groups
-    public static $leadingGroupSeparator = "/(.*)\s+(?:in)\s+(.*)/ui";
-    public static $symbolSeparator = "/(?<first>[^,]*)\s?,\s?(?<next>.*)$/ui";
-    public static $wordSeparator = "/^(?<first>.*?)\s?word\s?(?<next>.*)$/ui";
+    public static $leadingGroupSeparator = /* @lang text */ '/(.*)\s+(?:in)\s+(.*)/ui';
+    public static $symbolSeparator = /* @lang text */ '/(?<first>[^,]*)\s?,\s?(?<next>.*)$/ui';
+    public static $wordSeparator = /* @lang text */ '/^(?<first>.*?)\s?foo\s?(?<next>.*)$/ui';
 
 
     public function __construct(
-        string $leadingSeparationString = "in",
+        string $leadingSeparationString = 'in',
         bool $keepLeadingSeparator = false,
         int $multipleSeparationType = self::SYMBOL,
-        string $multipleSeparationSymbol = ",",
-        string $multipleSeparationWord = null
+        string $multipleSeparationSymbol = ',',
+        string $multipleSeparationWord = 'foo'
     )
     {
         $this->leadingSeparationString = $leadingSeparationString;
@@ -77,7 +77,7 @@ class ParserSettings
 
     public function getWordSeparatorExpression() : string
     {
-        $expression = preg_replace("/word/", $this->getWordSeparator(), self::$symbolSeparator);
+        $expression = preg_replace("/foo/", $this->getWordSeparator(), self::$wordSeparator);
         return $expression;
     }
 

@@ -46,7 +46,7 @@ class ParserSettingsTest extends TestCase
     {
         $parserSettings = new ParserSettings();
 
-        $this->assertSame(',', $parserSettings->getWordSeparator());
+        $this->assertSame('foo', $parserSettings->getWordSeparator());
     }
 
     public function testKeepLeadingSeparatorWhenManuallySetToTrue()
@@ -130,6 +130,6 @@ class ParserSettingsTest extends TestCase
     {
         $parserSettings = new ParserSettings();
 
-        $this->assertSame('/^(?<first>.*?)\s?word\s?(?<next>.*)$/ui', $parserSettings->getWordSeparatorExpression());
+        $this->assertSame('/^(?<first>.*?)\s?foo\s?(?<next>.*)$/ui', $parserSettings->getWordSeparatorExpression());
     }
 }
