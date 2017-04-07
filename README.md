@@ -1,8 +1,8 @@
 # IntervalParser
 
 [![Build Status](https://travis-ci.org/ekinhbayar/IntervalParser.svg?branch=master)](https://travis-ci.org/ekinhbayar/IntervalParser)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/ekinhbayar/IntervalParser/badges/quality-score.png?b=scrutinizer-setup)](https://scrutinizer-ci.com/g/ekinhbayar/IntervalParser/?branch=scrutinizer-setup)
-[![Code Coverage](https://scrutinizer-ci.com/g/ekinhbayar/IntervalParser/badges/coverage.png?b=scrutinizer-setup)](https://scrutinizer-ci.com/g/ekinhbayar/IntervalParser/?branch=scrutinizer-setup)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/ekinhbayar/IntervalParser/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/ekinhbayar/IntervalParser/?branch=master)
+[![Code Coverage](https://scrutinizer-ci.com/g/ekinhbayar/IntervalParser/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/ekinhbayar/IntervalParser/?branch=master)
 
 This is a work in progress.
 
@@ -39,11 +39,11 @@ class IntervalFlags
 `IntervalFinder` takes a `ParserSettings` object that allows you to set which separators to use, defaults being:
 
 ```
-string $leadingSeparationString = "in",
+string $leadingSeparationString = 'in',
 bool $keepLeadingSeparator = false,
 int $multipleSeparationType = self::SYMBOL,
-string $multipleSeparationSymbol  = ",",
-string $multipleSeparationWord = null
+string $multipleSeparationSymbol  = ',',
+string $multipleSeparationWord = 'foo'
 ```
 
 ---
@@ -117,4 +117,4 @@ var_dump($wordSeparatedIntervals);
 
 ---
 
-Thanks a ton to [Pieter](https://github.com/PeeHaa), [Chris](https://github.com/DaveRandom), [Bob](https://github.com/bwoebi),  [Paul](https://github.com/pcrov) for everything they made me learn and for all their help! :-)
+Thanks a ton to [PeeHaa](https://github.com/PeeHaa), [DaveRandom](https://github.com/DaveRandom), [bwoebi](https://github.com/bwoebi) and [pcrov](https://github.com/pcrov) for everything they made me learn and for all their help! :-)
